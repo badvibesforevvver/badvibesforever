@@ -1,0 +1,160 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Security.Permissions;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace бинарное_дерево
+{
+    public class Node // Определяем класс Node, представляющий узел бинарного дерева.
+    {
+        private Node _leftBranch; // Ссылка на левую ветвь (поддерево) узла.
+        private Node _rightBranch; // Ссылка на правую ветвь (поддерево) узла.
+
+        public Node(int id, int number) // Конструктор класса Node, принимающий идентификатор и значение узла.
+        {
+            _leftBranch = null; // Инициализируем левую ветвь как null.
+            _rightBranch = null; // Инициализируем правую ветвь как null.
+
+            Id = id; // Присваиваем идентификатор узла.
+            Number = number; // Присваиваем значение узла.
+        }
+
+        public int Id { get; private set; } // Свойство для получения идентификатора узла.
+
+        public int Number { get; private set; } // Свойство для получения значения узла.
+
+        public void Add(int number) // Метод для добавления нового значения в дерево.
+        {
+            if (IsChooseLeftBranch(number)) // Проверяем, следует ли добавлять в левую ветвь.
+                AddToBranch(ref _leftBranch, number); // Добавляем в левую ветвь.
+            else
+                AddToBranch(ref _rightBranch, number); // Добавляем в правую ветвь.
+        }
+
+        public bool IsFree() => _leftBranch == null && _rightBranch == null; // Проверка, свободен ли узел (нет дочерних ветвей).
+        private bool IsChooseLeftBranch(int number) => number < Number; // Определяем, следует ли выбрать левую ветвь (число меньше значения узла).
+
+        private bool IsBranchFree(Node node) => node == null; // Проверка, свободна ли ветвь (узел равен null).
+
+        private void AddToBranch(ref Node node, int number) // Метод для добавления значения в указанную ветвь.
+        {
+            if (IsBranchFree(node)) // Если ветвь свободна
+            {
+                int newId = Id + 1; // Создаем новый идентификатор для дочернего узла.
+                node = new Node(newId, number); // Создаем новый узел и присваиваем его ветви.
+            }
+            else
+            {
+                node.Add(number); // Если ветвь занята, рекурсивно добавляем в дочерний узел.
+            }
+        }
+
+        public void PrintValues() // Метод для печати значений узла и его поддеревьев.
+        {
+            if (IsBranchFree(_leftBranch) != true) // Если левая ветвь не свободна
+                _leftBranch.PrintValues(); // Рекурсивно печатаем значения левой ветви.
+
+            Console.WriteLine($"{Id}) - {Number}"); // Печатаем идентификатор и значение текущего узла.
+
+            if (IsBranchFree(_rightBranch) != true) // Если правая ветвь не свободна
+                _rightBranch.PrintValues(); // Рекурсивно печатаем значения правой ветви.
+        }
+
+        public void Remuve(int number) // Метод для удаления узла с указанным значением.
+        {
+            if (number == Number) // Если значение совпадает с текущим узлом
+            {
+                if (_leftBranch != null) // Если есть левая ветвь
+                {
+                    Number = _leftBranch.Number; // Переносим значение из левой ветви в текущий узел.
+                    _leftBranch.Number = number; // Обновляем значение левой ветви.
+                }
+                else // Если левой ветви нет
+                {
+                    Number = _rightBranch.Number; // Переносим значение из правой ветви в текущий узел.
+                    _rightBranch.Number = number; // Обновляем значение правой ветви.
+                }
+            }
+            else // Если значение не совпадает
+            {
+                if (IsChooseLeftBranch(number)) // Проверяем, следует ли искать в левой ветви
+                    FindRemuveBranch(ref _leftBranch, number); // Рекурсивно ищем в левой ветви.
+                else
+                    FindRemuveBranch(ref _rightBranch, number); // Ищем в правой ветви.
+            }
+        }
+
+        private void FindRemuveBranch(ref Node node, int number) // Метод для поиска ветви для удаления.
+        {
+            if (node.Number == number) // Если найден узел с указанным значением,
+            {
+                RemuveBranch(ref node, number); // Удаляем ветвь.
+            }
+            else
+                node.Remuve(number); // Рекурсивно ищем в дочернем узле.
+        }
+
+        private void RemuveBranch(ref Node node, int number) // Метод для удаления ветви.
+        {
+            if (node.IsFree()) // Если ветвь свободна,
+            {
+                node = null; // Удаляем узел (присваиваем null).
+            }
+            else
+            {
+                node.ShiftBranch(); // Если ветвь занята, сдвигаем ветвь.
+            }
+        }
+
+        private void Shift(ref Node node) // Метод для сдвига узла.
+        {
+            if (node.IsFree()) // Если узел свободен,
+            {
+                Number = node.Number; // Переносим значение из узла.
+                node = node.RemuveOneBranch(); // Удаляем узел и возвращаем одну из его ветвей.
+            }
+            else
+            {
+                node.ShiftBranch(); // Если узел занят, сдвигаем ветвь.
+            }
+        }
+
+        public void ShiftBranch() // Метод для сдвига ветви.
+        {
+            if (_leftBranch != null) // Если есть левая ветвь
+            {
+                Shift(ref _leftBranch); // Сдвигаем левую ветвь.
+            }
+            else if (_rightBranch != null) // Если левой ветви нет, но есть правая,
+            {
+                Shift(ref _rightBranch); // Сдвигаем правую ветвь.
+            }
+        }
+
+        public Node RemuveOneBranch() // Метод для удаления одной ветви.
+        {
+            if (IsBranchFree(_leftBranch) != true) // Если левая ветвь не свободна,
+                return _leftBranch; // Возвращаем левую ветвь.
+            else
+                return _rightBranch; // Иначе возвращаем правую ветвь.
+        }
+
+        public void Find(int number) // Метод для поиска узла с указанным значением.
+        {
+            if (number == Number) // Если значение совпадает с текущим узлом,
+            {
+                Console.WriteLine($"{Id} - {Number}"); // Печатаем идентификатор и значение узла.
+            }
+            else
+            {
+                if (IsChooseLeftBranch(number)) // Если значение меньше, ищем в левой ветви,
+                    _leftBranch.Find(number); // Рекурсивно ищем в левой ветви.
+                else
+                    _rightBranch.Find(number); // Ищем в правой ветви.
+            }
+        }
+    }
+}
